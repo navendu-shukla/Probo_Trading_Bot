@@ -1,8 +1,11 @@
 // stockRoutes.js
+//to update below two lines into index.js in router folder
 const express = require('express');
+const router = express.Router();
+
 const { getStockPrice, getAllStockPrices } = require('../controllers/stockController');
 
-const router = express.Router();
+
 
 // Route to get all stock prices
 router.get('/prices', getAllStockPrices);
