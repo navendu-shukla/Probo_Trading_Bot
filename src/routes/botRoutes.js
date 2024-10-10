@@ -3,12 +3,12 @@ const express = require('express');
 const router = express.Router();
 
 //import changes required
-const { getPortfolio, buyStock, sellStock } = require('../controllers/botController');
+const { getPortfolio, buyStockByBot, sellStockByBot } = require('../controllers/botController');
 
 
 router.get('/portfolio', getPortfolio);
-router.post('/buy', buyStock);
-router.post('/sell', sellStock);
+router.post('/buy', buyStockByBot);
+router.post('/sell', sellStockByBot);
 
 
 module.exports = router;

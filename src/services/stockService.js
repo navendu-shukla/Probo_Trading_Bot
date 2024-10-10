@@ -1,6 +1,6 @@
 // stockService.js
-import { simulateStockMarket } from "../config/exchange";
-import { stocks, oldStockPrices } from "../config/prices";
+const {simulateStockMarket} = require( "../config/exchange");
+const {stocks} = require( "../config/prices");
 
 // Start the stock price simulation
 simulateStockMarket();

@@ -3,6 +3,7 @@ const Trade = require("../models/trades");
 const CashBalance = require("../models/cashBalance");
 const stockService = require("./stockService");
 const { NUMBER } = require("sequelize");
+const { getCashBalanceFromDb, setCashBalanceToDb } = require("../dao/botDao");
 
 const priceHistory = {
   AAPL: [],
@@ -14,18 +15,19 @@ const priceHistory = {
 // Fetch cash balance
 async function getCashBalance() {
   //to update db query in dao layer
-  const cash = await CashBalance.findOne({ where: { id: 1 } });
+  const cash = await getCashBalanceFromDb();
   return cash ? Number(cash.balance) : 0;
 }
 
 // Update cash balance
 async function updateCashBalance(newBalance) {
-  const cash = await CashBalance.findOne({ where: { id: 1 } });
+  console.log(`New Balance : ${newBalance}`)
+  const cash = await getCashBalanceFromDb();
   if (cash) {
     cash.balance = newBalance;
     await cash.save();
   } else {
-    await CashBalance.create({ balance: newBalance });
+    await setCashBalanceToDb();
   }
 }
 
@@ -35,8 +37,9 @@ async function updateCashBalance(newBalance) {
 async function buyStock(symbol, price) {
   console.log("buyStock is called");
   let cash = await getCashBalance();
-  const quantity = Math.floor(cash / price);
+  const quantity = Math.floor(cash / price)<5?Math.floor(cash / price):5;
   console.log(`quantity ${quantity}`);
+  console.log(`cash ${cash}`);
 
   if (quantity > 0) {
     cash -= (quantity * price).toFixed(2);
@@ -95,14 +98,15 @@ function calculateMovingAverage(prices, period) {
 
 function tradeBasedOnMovingAverage() {
   const prices = stockService.getStockPrices();
-
+  // console.log("##########################: "+JSON.stringify(prices));
   Object.keys(prices).forEach(async (symbol) => {
     const price = prices[symbol];
-
+    // console.log("##########################: "+price);
+    // console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@: "+symbol);
     // Keep track of price history for each stock
     priceHistory[symbol].push(price);
 
-    if (priceHistory[symbol].length >= 20) {
+    if (priceHistory[symbol].length >= 20) { // TODO add constant for the moving avg limit
       // Calculate short-term (5-period) and long-term (20-period) moving averages
       const shortTermMA = calculateMovingAverage(priceHistory[symbol], 5);
       const longTermMA = calculateMovingAverage(priceHistory[symbol], 20);
@@ -143,7 +147,7 @@ function tradeStocks() {
 }
 
 // Execute trading logic every 2 seconds
-// setInterval(tradeBasedOnMovingAverage, 2000);
+setInterval(tradeBasedOnMovingAverage, 2000);
 
 module.exports = {
   buyStock,
