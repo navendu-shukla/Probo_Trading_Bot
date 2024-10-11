@@ -24,7 +24,6 @@ async function getCashBalance() {
 
 // Update cash balance
 async function updateCashBalance(newBalance) {
-  console.log(`New Balance : ${newBalance}`)
   const cash = await getCashBalanceFromDb();
   if (cash) {
     cash.balance = newBalance;
@@ -37,11 +36,8 @@ async function updateCashBalance(newBalance) {
 
 // Buy stock and update portfolio
 async function buyStock(symbol, price) {
-  console.log("buyStock is called");
   let cash = await getCashBalance();
   const quantity = Math.floor(cash / price)<5?Math.floor(cash / price):5; //set max quantity to be traded at a time to 5
-  console.log(`quantity ${quantity}`);
-  console.log(`cash ${cash}`);
 
   if (quantity > 0) {
     cash -= (quantity * price).toFixed(2);
@@ -70,9 +66,7 @@ async function buyStock(symbol, price) {
 
 // Sell stock and update portfolio
 async function sellStock(symbol, price) {
-  console.log("sellStock is called");
   const portfolioItem = await Portfolio.findOne({ where: { symbol } });
-  console.log(`portfolio ${portfolioItem}`);
 
   if (portfolioItem) {
     const quantity = portfolioItem.quantity;
@@ -90,7 +84,6 @@ async function sellStock(symbol, price) {
 
 function calculateMovingAverage(prices, period) {
   const sum = prices.slice(-period).reduce((acc, price) => acc + price, 0); 
-  console.log(sum / period);
   return Number((sum / period).toFixed(2));
 }
 
@@ -129,9 +122,6 @@ function tradeStocksBasedOnPriceMovement() {
 
   Object.keys(updatedStockPrices).forEach((stock) => {
     const price = updatedStockPrices[stock];
-    console.log(stock);
-    console.log(`updated: ${updatedStockPrices[stock]}`);
-    console.log(`previous: ${prevStockPrices[stock]}`);
     if (price <= prevStockPrices[stock] * 0.95) {
       // Buy if price drops by 5%
       buyStock(stock, price);
