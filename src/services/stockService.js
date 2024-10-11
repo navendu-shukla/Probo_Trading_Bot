@@ -1,6 +1,6 @@
 // stockService.js
 const {simulateStockMarket} = require( "../config/exchange");
-const {stocks} = require( "../config/prices");
+const {stocks,oldStockPrices} = require( "../config/prices");
 
 // Start the stock price simulation
 simulateStockMarket();
@@ -10,6 +10,11 @@ function getStockPrices() {
   return stocks;
 }
 
+function getPreviousStockPrices(){
+  return oldStockPrices;
+}
+
 module.exports = {
   getStockPrices,
+  getPreviousStockPrices
 };

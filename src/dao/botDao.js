@@ -8,8 +8,12 @@ async function getCashBalanceFromDb() {
     return await CashBalance.findOne({ where: { id: 1 } });
 }
 
-async function setCashBalanceToDb(params) {
+async function setCashBalanceToDb() {
     CashBalance.create({ balance: newBalance })
+}
+
+async function saveCash() {
+    await cash.save();
 }
 
 module.exports={

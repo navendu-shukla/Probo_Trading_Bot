@@ -12,6 +12,9 @@ const priceHistory = {
   AMZN: [],
 };
 
+const movingAvgUpperLimit = 20;
+const movingAvgLowerLimit = 5;
+
 // Fetch cash balance
 async function getCashBalance() {
   //to update db query in dao layer
@@ -32,12 +35,11 @@ async function updateCashBalance(newBalance) {
 }
 
 
-// sort krdo bhaiya
 // Buy stock and update portfolio
 async function buyStock(symbol, price) {
   console.log("buyStock is called");
   let cash = await getCashBalance();
-  const quantity = Math.floor(cash / price)<5?Math.floor(cash / price):5;
+  const quantity = Math.floor(cash / price)<5?Math.floor(cash / price):5; //set max quantity to be traded at a time to 5
   console.log(`quantity ${quantity}`);
   console.log(`cash ${cash}`);
 
@@ -86,30 +88,23 @@ async function sellStock(symbol, price) {
   }
 }
 
-// async function tradeStocks() {
-//   const stockPrices = stockService.getStockPrice('AAPL');
-// }
-
 function calculateMovingAverage(prices, period) {
-  const sum = prices.slice(-period).reduce((acc, price) => acc + price, 0); //is '-' required
+  const sum = prices.slice(-period).reduce((acc, price) => acc + price, 0); 
   console.log(sum / period);
-  return Number((sum / period).toFixed(2)); //import check return type
+  return Number((sum / period).toFixed(2));
 }
 
 function tradeBasedOnMovingAverage() {
   const prices = stockService.getStockPrices();
-  // console.log("##########################: "+JSON.stringify(prices));
   Object.keys(prices).forEach(async (symbol) => {
     const price = prices[symbol];
-    // console.log("##########################: "+price);
-    // console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@: "+symbol);
     // Keep track of price history for each stock
     priceHistory[symbol].push(price);
 
-    if (priceHistory[symbol].length >= 20) { // TODO add constant for the moving avg limit
+    if (priceHistory[symbol].length >= movingAvgUpperLimit) {
       // Calculate short-term (5-period) and long-term (20-period) moving averages
-      const shortTermMA = calculateMovingAverage(priceHistory[symbol], 5);
-      const longTermMA = calculateMovingAverage(priceHistory[symbol], 20);
+      const shortTermMA = calculateMovingAverage(priceHistory[symbol], movingAvgLowerLimit);
+      const longTermMA = calculateMovingAverage(priceHistory[symbol], movingAvgUpperLimit);
 
       // Generate buy/sell signals based on moving averages
       if (shortTermMA > longTermMA) {
@@ -128,18 +123,19 @@ function tradeBasedOnMovingAverage() {
   });
 }
 
-function tradeStocks() {
-  const { updatedStockPrices, prevStockPrices } = stockService.getStockPrices();
+function tradeStocksBasedOnPriceMovement() {
+  const updatedStockPrices = stockService.getStockPrices();
+  const prevStockPrices = stockService.getPreviousStockPrices();
 
   Object.keys(updatedStockPrices).forEach((stock) => {
     const price = updatedStockPrices[stock];
     console.log(stock);
     console.log(`updated: ${updatedStockPrices[stock]}`);
     console.log(`previous: ${prevStockPrices[stock]}`);
-    if (!portfolio[stock] && price <= prevStockPrices[stock] * 0.95) {
+    if (price <= prevStockPrices[stock] * 0.95) {
       // Buy if price drops by 5%
       buyStock(stock, price);
-    } else if (portfolio[stock] && price >= portfolio[stock].avgPrice * 1.1) {
+    } else if (price >= prevStockPrices[stock].avgPrice * 1.1) {
       // Sell if price rises by 10%
       sellStock(stock, price);
     }
